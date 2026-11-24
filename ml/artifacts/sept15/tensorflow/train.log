@@ -1,0 +1,19 @@
+sept15: train=1265881 test=316471 bins=16 tf=2.21.0
+Model: 1155 parameters
+  epoch   0  loss=0.0719
+  epoch   5  loss=0.0423
+  epoch  10  loss=0.0498
+  epoch  15  loss=0.0498
+  epoch  20  loss=0.0487
+  epoch  25  loss=0.0484
+  epoch  30  loss=0.0481
+  epoch  35  loss=0.0480
+  epoch  40  loss=0.0712
+  epoch  45  loss=0.0712
+  epoch  50  loss=0.0699
+  epoch  55  loss=0.0652
+  epoch  59  loss=0.0546
+
+Fit time: 87.1s
+Chronological split — train accuracy: 0.9886  test accuracy: 0.8887
+Saved to /Users/vadirajdeshpande/workspace/ka-edge-ai-node-v2/ml/keras_tf/../artifacts/sept15/tensorflow

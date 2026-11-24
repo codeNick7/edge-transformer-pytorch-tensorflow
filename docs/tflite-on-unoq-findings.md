@@ -17,6 +17,25 @@ TensorFlow Lite on the Mac.
 History: in October 2026 (contest) this route was judged too risky and **never tried**. Forum reports then described
 linker errors (undefined math functions) for TFLite C++ libraries on the UNO Q; core 0.54.1–1.1.0 fixed that class.
 
+## Result 2: the real transformer (2026-11-24)
+| Item | Value |
+|---|---|
+| Model | The edge transformer (1,155 params), trained in TensorFlow/Keras, float32 TFLite, **17,256 bytes**, 15 op types |
+| Ops | ADD, CAST, CONCATENATION, FULLY_CONNECTED, GATHER, MEAN, MUL, PACK, RESHAPE, RSQRT, SOFTMAX, SQUARED_DIFFERENCE, STRIDED_SLICE, SUB, SUM |
+| Samples | 8 real sept15 test rows: 2 correct per class + 2 the model gets wrong |
+| Board result | **8/8 PASS every cycle**, incl. both misclassifications reproduced with the same confidence; max abs probability difference < 1e-7 |
+| Latency | **~1.96 ms per prediction** (1,942–1,969 µs) on the STM32U585; PRD target < 50 ms |
+| Arena | 32,768 bytes configured (not yet minimised) |
+| Build | Reused the TensorFlow-Test app so the compiled library cache was reused (a new app recompiles TFLM, ~15–20 min) |
+
+How the model was made board-compatible (tflm_cortexm 1.0.0 has no BATCH_MATMUL):
+- attention written as broadcast MUL + SUM instead of matmul (identical math)
+- weights frozen to constants before conversion (`convert_variables_to_constants_v2`); left as variables, every dense layer
+  became BATCH_MATMUL
+- float32 input (bin ids) cast to int32 inside the model, so EloquentTinyML's float `predict()` works
+- ops registered explicitly from the generated `model.h` (`REGISTER_MODEL_OPS`), each once, no `TF_OP_*` macros
+- int8 post-training quantisation was tried and dropped: 39.6% test accuracy (see the P0 plan)
+
 ## Working setup
 | Component | Version |
 |---|---|
@@ -48,9 +67,7 @@ Model generator: `ml/board_test/make_smoke_model.py`. Include order: `model.h` �
 ## Caveats / to do
 - Patches 2 and 4 live in App Lab's library cache (`~/.arduino15/internal/tflm_cortexm_1.0.0_*/`) and can be overwritten by a
   reinstall or App Lab update. Before the real model ships, vendor a patched copy of the library into the repo/sketch.
-- This proves FULLY_CONNECTED + SOFTMAX only. The transformer also needs (at least) embedding lookup, concatenation, LayerNorm
-  (mean / squared difference / rsqrt or equivalents), batched matmul for attention, and add/mul. Each must be checked against the
-  ops tflm_cortexm 1.0.0 provides (Phase 3/4).
+- The transformer's 15 ops are verified on the board (Result 2).
 - Arena size to be minimised with the real model.
 
 ## Reproduce

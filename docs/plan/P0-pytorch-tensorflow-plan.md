@@ -53,7 +53,7 @@ comparison: hand-written vs PyTorch vs TensorFlow vs TFLite.
 - [x] If route A compiles: flash, run inference, read the output — DONE (output via Monitor)
 - [x] Outcome written to `docs/tflite-on-unoq-findings.md`
 - [ ] Vendor a patched tflm_cortexm into the repo so the build doesn't depend on App Lab's cache
-- [ ] Check which TFLM ops tflm_cortexm 1.0.0 provides vs the transformer's op list (after Phase 3 conversion)
+- [x] Op check: transformer needs 15 ops, all provided (BATCH_MATMUL avoided)
 - [ ] If route A fails: decide with the user between route B (vanilla Zephyr + tflite-micro module; loses Bridge until restored)
       and route C (LiteRT on the QRB2210 Linux side)
 
@@ -86,14 +86,22 @@ comparison: hand-written vs PyTorch vs TensorFlow vs TFLite.
       **Headline comparison = sept15.** For combined, report per-pot results and this caveat
 - [ ] Leave-one-pot-out (optional; known near-zero for the calibration reason; report only if run for all frameworks)
 
-### Phase 3 — TensorFlow model (Mac)
-- [ ] `ml/tensorflow/model.py`: Keras functional model, same architecture and parameter count
-- [ ] Train with the same split; compare accuracy
-- [ ] Export TFLite float32 and int8 (post-training quantisation with a representative dataset); measure the accuracy drop
-- [ ] Generate the C array (`xxd -i`) for the MCU build
-- [ ] Tests (param count, TFLite round-trip within tolerance)
+### Phase 3 — TensorFlow model (Mac) — DONE 2026-11-24 (sept15)
+- [x] `ml/keras_tf/tf_model.py`: Keras port, **1,155 params**, logits equal the hand-written model with the same weights (float32 precision);
+      attention written as broadcast MUL + SUM, per-token dense layers via RESHAPE (board has no BATCH_MATMUL)
+- [x] `ml/keras_tf/train.py`: same settings as the other two. sept15: **98.86% train / 88.87% test**, fit 87.1 s (CPU). Loss spiked at epoch 40: lr 0.05 is high (tune later for all frameworks)
+- [x] `ml/keras_tf/convert_tflite.py`: weights frozen to constants first (else BATCH_MATMUL); float32 input (bin ids) cast to int32 inside for EloquentTinyML.
+      **float32: 17,256 bytes, 15 op types, all on the board list; full test set (316,471 rows) 88.87%, 0 class mismatches vs Keras, max prob diff 3.0e-7**
+- [x] **int8 experiment failed: 39.62% test accuracy**, 17,376 bytes (not smaller; DEQUANTIZE inserted, partial quantisation).
+      Hypothesis (unverified): the float input bin ids get quantised before the CAST, so GATHER reads wrong rows. Float32 is the deploy choice
+- [x] Tests `ml/tests/test_tensorflow_model.py`: param count, equivalence (3 seeds), conversion uses only board ops
+- [ ] Combined dataset run (optional, same caveat as PyTorch)
 
 ### Phase 4 — On-device deployment (board; user flashes)
+- [x] `ml/board_test/make_transformer_header.py` → `ml/board_test/tflm_transformer/sketch/model.h`: 8 real test rows (6 correct + 2 the
+      model gets wrong, so the board must reproduce mistakes too), expected outputs from Mac TFLite reference kernels; registers the 15 ops once
+- [x] User built + ran `tflm_transformer` in App Lab (TensorFlow-Test app, cached library): **8/8 PASS every cycle (incl. the 2 wrong ones), max|dp| < 1e-7, ~1.96 ms/prediction**
+- [ ] Minimise the arena; on-device binning from raw features (bin edges on the MCU); wire into the evidence-record flow
 - [ ] Deploy via the route chosen in Phase 0; measure latency, RAM, flash
 - [ ] Linux side: LiteRT (`ai-edge-litert`) inference service as an alternative to the pure-Python model; compare latency
 - [ ] Keep the evidence-record format; stamp the framework + model version
@@ -122,3 +130,6 @@ comparison: hand-written vs PyTorch vs TensorFlow vs TFLite.
 | 2026-11-24 | Hypothesis CONFIRMED on board: tflm_cortexm library.properties has dot_a_linkage=true; duplicate basenames kernel_util.cpp, portable_tensor_utils.cpp, tensor_utils.cpp; tflm_cortexm.a holds each once (overwritten). Fix applied by user: dot_a_linkage=false (backup library.properties.orig). Second local patch in App Lab cache |
 | 2026-11-24 | **Route A works**: TFLM smoke MLP on the UNO Q MCU, 6/6 PASS (probabilities match the Mac to <1e-6), 34 µs/prediction. Findings doc written; duplicate op registration removed from sketch |
 | 2026-11-24 | Phase 3 started (NOT in the first commit): Keras port `ml/keras_tf/tf_model.py` matches the hand-written model (equivalence tests pass), but the TFLite converter still emits BATCH_MATMUL (not on the board). Board op list saved to ml/board_test/tflm_cortexm_ops.txt |
+| 2026-11-24 | BATCH_MATMUL root cause: weights left as resource variables (VAR_HANDLE/READ_VARIABLE) so every dense matmul became BATCH_MATMUL; attention mul+sum was fine. Fix: freeze with convert_variables_to_constants_v2 before conversion -> 14 op types, all on the board list, 12,184 bytes, matches Keras to 6e-8. No hand-written kernel needed |
+| 2026-11-24 | Phase 3 done: Keras 98.86%/88.87%; float32 TFLite verified on full test set (0 mismatches); int8 failed (39.6%). Transformer board sketch generated |
+| 2026-11-24 | **Phase 4 core: the real transformer runs on the UNO Q MCU** — 8/8 PASS, identical to the Mac incl. misclassifications, ~1.96 ms/prediction |
