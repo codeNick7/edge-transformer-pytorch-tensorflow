@@ -1,0 +1,19 @@
+combined: train=1680766 test=420192 bins=16 device=cpu
+Model: 1155 parameters
+  epoch   0  loss=0.0780
+  epoch   5  loss=0.0612
+  epoch  10  loss=0.0530
+  epoch  15  loss=0.0534
+  epoch  20  loss=0.0528
+  epoch  25  loss=0.0528
+  epoch  30  loss=0.4975
+  epoch  35  loss=0.4982
+  epoch  40  loss=0.4975
+  epoch  45  loss=0.4975
+  epoch  50  loss=0.4968
+  epoch  55  loss=0.4501
+  epoch  59  loss=0.4498
+
+Fit time: 94.8s
+Chronological split — train accuracy: 0.9736  test accuracy: 0.9986
+Saved to /Users/vadirajdeshpande/workspace/ka-edge-ai-node-v2/ml/pytorch/../artifacts/combined/pytorch

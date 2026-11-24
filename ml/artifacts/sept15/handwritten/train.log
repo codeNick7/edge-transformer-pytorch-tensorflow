@@ -1,0 +1,26 @@
+Loaded 1582352 rows from data-local/datasets/sept15.jsonl
+In-scope (stable/waterlogged_risk/soil_health_degrading): 1582352; dropped (out of scope for this trial): 0
+
+Chronological split: train=1265881 test=316471
+Train label distribution: {'soil_health_degrading': 248412, 'stable': 946885, 'waterlogged_risk': 70584}
+Test label distribution:  {'soil_health_degrading': 32820, 'stable': 125395, 'waterlogged_risk': 158256}
+
+Model: 1155 parameters, 16 bins/feature
+  epoch   0  loss=0.0808
+  epoch   5  loss=0.0447
+  epoch  10  loss=0.0593
+  epoch  15  loss=0.0595
+  epoch  20  loss=0.0594
+  epoch  25  loss=0.0592
+  epoch  30  loss=0.0698
+  epoch  35  loss=0.0688
+  epoch  40  loss=0.0687
+  epoch  45  loss=0.0451
+  epoch  50  loss=0.0445
+  epoch  55  loss=0.0449
+  epoch  59  loss=0.0450
+
+Fit time: 226.1s
+Chronological split — train accuracy: 0.9886  test accuracy: 0.8887
+Leave-one-pot-out (train=A, test=B): accuracy=0.0270 (n_train=191231, n_test=1391121)
+Leave-one-pot-out (train=B, test=A): accuracy=0.5814 (n_train=1391121, n_test=191231)
