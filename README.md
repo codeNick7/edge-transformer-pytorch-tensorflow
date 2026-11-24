@@ -7,6 +7,9 @@ Lite Micro**, giving the same answers as on a laptop.
 It extends the [Karbon-Assure Edge AI Node](https://github.com/codeNick7/KA-Edge-AI-Node), an evidence-grade soil-health
 monitor for digital MRV (Measurement, Reporting and Verification) of carbon projects
 ([project article on Electronics For You](https://www.electronicsforu.com/electronics-projects/karbon-assure-edge-ai-node-an-evidence-grade-soil-health-monitor-for-digital-mrv)).
+The device was entered in two contests: first the **Arduino Physical AI Challenge India 2026** (Robu.in × Arduino), with
+a rule-based classifier, then **EFY's AIoT Design Challenge 2026**, with the hand-written transformer that this repository
+ports to PyTorch and TensorFlow.
 
 ## Outcome at a glance
 
